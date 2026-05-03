@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Quick Bite Crew</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #020617, #1e293b);
+  color: white;
+}
+
+/* NAVBAR */
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  background: linear-gradient(to right, #ef4444, #dc2626);
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.left-nav {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.location {
+  background: rgba(255,255,255,0.2);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+}
+
+.user-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logout-btn {
+  background: transparent;
+  border: 1px solid white;
+  padding: 5px 10px;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background: #020617;
+}
+
+/* HERO */
+.hero {
+  margin-top: 80px;
+  padding: 20px;
+}
+
+.search {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  margin-top: 10px;
+}
+
+/* LAYOUT */
+.container {
+  display: flex;
+}
+
+.left {
+  width: 75%;
+  padding: 20px;
+}
+
+.cart {
+  width: 25%;
+  position: fixed;
+  right: 0;
+  top: 80px; /* FIXED */
+  height: calc(100% - 80px);
+  background: rgba(30,41,59,0.95);
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* GRID */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+/* CARD */
+.card {
+  background: rgba(30,41,59,0.6);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 20px rgba(239,68,68,0.4);
+}
+
+.card img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+}
+
+.btn {
+  margin: 10px;
+  padding: 8px;
+  background: #ef4444;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+/* CART */
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0;
+}
+
+.checkout {
+  margin-top: 20px;
+  background: #ef4444;
+  padding: 12px;
+  text-align: center;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="left-nav">
+    <b>🍔 Quick Bite Crew</b>
+    <span class="location">📍 Vaishali</span>
+  </div>
+
+  <div class="user-box">
+    <span id="userText"></span>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <h2>Craving Something Delicious?</h2>
+  <p>Hot. Fresh. Fast.</p>
+  <input class="search" placeholder="Search food...">
+</div>
+
+<div class="container">
+
+<div class="left">
+
+  <h3>✨ Recommended</h3>
+  <div class="grid" id="recommended"></div>
+
+  <h3>🔥 Combos</h3>
+  <div class="grid" id="combos"></div>
+
+  <h3>🍽 Full Menu</h3>
+  <div class="grid" id="menu"></div>
+
+</div>
+
+<div class="cart">
+  <h3>Cart</h3>
+  <div id="cart"></div>
+  <h4>Total: ₹<span id="total">0</span></h4>
+  <div class="checkout" onclick="checkout()">Checkout</div>
+</div>
+
+</div>
+
+<script>
+
+// LOGIN CHECK
+const user = JSON.parse(localStorage.getItem("user"));
+if (!user) window.location.href = "login.html";
+document.getElementById("userText").innerText = user.name;
+
+// DATA
+const foods = [
+  {name:"Burger",price:120,img:"burger.jpg"},
+  {name:"Pizza",price:250,img:"pizza.jpg"},
+  {name:"Pasta",price:180,img:"pasta.jpg"},
+  {name:"Fries",price:90,img:"fries.jpg"},
+  {name:"Chilli Paneer",price:220,img:"Chilli-paneer.jpg"},
+  {name:"Noodles",price:150,img:"Noodles.jpg"},
+  {name:"Fried Rice",price:140,img:"Fried-rice.jpg"},
+  {name:"Gulab Jamun",price:100,img:"Gulab-Jamun.jpg"},
+  {name:"Ice Cream",price:120,img:"Ice-Cream.jpg"},
+  {name:"Cold Coffee",price:120,img:"Cold-Coffee.jpg"}
+];
+
+const combos = [
+  {name:"Burger Combo",price:199,img:"burger.jpg"},
+  {name:"Pizza Combo",price:299,img:"pizza.jpg"}
+];
+
+let cart = [];
+
+// RENDER
+function render(data, id){
+  const div = document.getElementById(id);
+  div.innerHTML = "";
+
+  data.forEach(item=>{
+    div.innerHTML += `
+      <div class="card">
+        <img src="./images/${item.img}">
+        <h4>${item.name}</h4>
+        <p>₹${item.price}</p>
+        <button class="btn" onclick="add('${item.name}',${item.price})">Add</button>
+      </div>
+    `;
+  });
+}
+
+// CART
+function add(name, price){
+  const exist = cart.find(c=>c.name===name);
+  if(exist) exist.qty++;
+  else cart.push({name,price,qty:1});
+  renderCart();
+}
+
+function renderCart(){
+  const div = document.getElementById("cart");
+  div.innerHTML = "";
+  let total = 0;
+
+  cart.forEach(item=>{
+    total += item.price * item.qty;
+    div.innerHTML += `
+      <div class="cart-item">
+        ${item.name} x ${item.qty}
+        <span>₹${item.price * item.qty}</span>
+      </div>
+    `;
+  });
+
+  document.getElementById("total").innerText = total;
+}
+
+// LOGOUT
+function logout(){
+  localStorage.removeItem("user");
+  window.location.href = "login.html";
+}
+
+// CHECKOUT
+function checkout(){
+  if(cart.length === 0){
+    alert("Cart empty");
+    return;
+  }
+
+  fetch("http://localhost:3000/api/order",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      user,
+      cart,
+      total:cart.reduce((t,i)=>t+i.price*i.qty,0)
+    })
+  })
+  .then(res=>res.json())
+  .then(()=>{
+    alert("Order placed!");
+    cart=[];
+    renderCart();
+  });
+}
+
+// LOAD
+render(foods.slice(0,4),"recommended");
+render(combos,"combos");
+render(foods,"menu");
+
+</script>
+
+</body>
+</html>
